@@ -59,8 +59,8 @@ mongoose.connect(db, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then(() => {
-    console.log('connection successfully')
-}).catch(err => console.log('no connection',err))
+    console.log('mongodb(atlas) connection successfully')
+}).catch(err => console.log('no connection', err))
 
 const signupSchema = new mongoose.Schema({
     name: String,
@@ -125,6 +125,20 @@ app.get('/', verifyUser, (req, res) => {
 })
 
 
+import nodemailer from 'nodemailer'
+var transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    requireTLS: true,
+    sedrvice: 'gmail',
+    auth: {
+        user: 'u21cs035@coed.svnit.ac.in',
+        pass: 'NIT05-08-2001'
+    }
+})
+
+
 app.post('/signup', upload.single('image'), async (req, res) => {
     const model = new mongoose.model('signup', signupSchema);
     // const { name, email, password, image } = req.body;
@@ -145,8 +159,17 @@ app.post('/signup', upload.single('image'), async (req, res) => {
 
     const data1 = new model({ name: req.body.name, email: req.body.email, password: req.body.password, image: req.file.filename })
     const result = await data1.save();
-    return res.json({ Status: "Success" })
-
+    var mailOption1 = {
+        from: 'u21cs035@coed.svnit.ac.in',
+        to: req.body.email,
+        subject: 'Thanks For Create account',
+        html: '<p><b>You are welcome in airRv_travel service</b><br/><br/><b>Thank You!</b></p>'
+    }
+    transporter.sendMail(mailOption1, (err, info) => {
+        if (err) return res.json({ Error: "msg send Error in server " });
+        // console.log('successfull', info.response)
+        return res.json({ Status: "Success" })
+    })
 })
 
 app.post('/login', async (req, res) => {
@@ -177,7 +200,6 @@ app.post('/login', async (req, res) => {
     else {
         return res.json({ Status: "Error", Error: "Wrong Email and Password" })
     }
-
 })
 
 app.get('/logout', (req, res) => {
@@ -288,19 +310,6 @@ app.put('/changepassword', async (req, res) => {
 
 
 // for forget password
-
-import nodemailer from 'nodemailer'
-var transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    requireTLS: true,
-    sedrvice: 'gmail',
-    auth: {
-        user: 'u21cs035@coed.svnit.ac.in',
-        pass: 'NIT05-08-2001'
-    }
-})
 
 app.post('/sendotp', async (req, res) => {
     const model = new mongoose.model('signup', signupSchema);
