@@ -102,6 +102,13 @@ const otpSchema = new mongoose.Schema({
     expiresIn: Number
 })
 
+const contactSchema = new mongoose.Schema({
+    name: String,
+    email: String,
+    subject: String,
+    message: String
+})
+
 
 const verifyUser = (req, res, next) => {
     const token = req.cookies.token;
@@ -281,6 +288,24 @@ app.get('/booking_history/:id', async (req, res) => {
     const model = new mongoose.model('pay_detail', pay_detailSchema);
     const result = await model.find({ login_id: id });
     res.json({ Result: result, Status: 'Success' })
+})
+
+app.post('/contact', async (req, res) => {
+    var mailOption2 = {
+        from: 'u21cs035@coed.svnit.ac.in',
+        to: req.body.email,
+        subject: req.body.subject,
+        text: req.body.message
+    }
+    if (req.body.name.length == 0 || req.body.email.length == 0 || req.body.subject.length == 0 || req.body.message.length == 0) {
+        return res.json({ Error: "Plaese Enter a Data" })
+    }
+    transporter.sendMail(mailOption2, (err, info) => {
+        if (err) return res.json({ Error: "msg send Error in server " });
+        // console.log('successfull', info.response)
+        return res.json({ Status: "Success" })
+
+    })
 })
 
 app.put('/changepassword', async (req, res) => {
