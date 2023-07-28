@@ -13,6 +13,8 @@ import cookieParser from "cookie-parser";
 
 
 
+
+
 const salt = 10;
 const app = express();
 dotenv.config();
@@ -100,6 +102,14 @@ const otpSchema = new mongoose.Schema({
     email: String,
     otpcode: String,
     expiresIn: Number
+})
+
+const paymentHistory = new mongoose.Schema({
+    cardname: String,
+    cardnumber: String,
+    expire: String,
+    cvv: String,
+    Tprice: String
 })
 
 
@@ -395,6 +405,19 @@ app.post('/forgetpassword/:email', async (req, res) => {
     else {
         return res.json({ Error: "Invalid OTP" })
     }
+})
+
+app.post('/payment', async (req, res) => {
+    const model = new mongoose.model('paymenthistory', paymentHistory);
+
+    if (!req.body.cardname.length || !req.body.cardnumber.length || !req.body.expire.length || !req.body.cvv.length || !req.body.Tprice.length) {
+        return res.json({ Error: "Please enter details" })
+    }
+
+    const data = new model({ cardname: req.body.cardname, cardnumber: req.body.cardnumber, expire: req.body.expire, cvv: req.body.cvv, Tprice: req.body.Tprice })
+    const result = await data.save();
+    return res.json({ Status: "Success" })
+
 })
 
 
