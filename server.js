@@ -96,6 +96,7 @@ const pay_detailSchema = new mongoose.Schema({
     chk_out: String,
     pro_id: String,
     stay_day: String,
+    paymentstatus: String
 });
 
 const otpSchema = new mongoose.Schema({
@@ -109,7 +110,8 @@ const paymentHistory = new mongoose.Schema({
     cardnumber: String,
     expire: String,
     cvv: String,
-    Tprice: String
+    Tprice: String,
+    paymentstatus: String
 })
 
 
@@ -276,11 +278,11 @@ app.post('/pay_detail', async (req, res) => {
     const model = new mongoose.model('pay_detail', pay_detailSchema);
     // const { name, email, password, image } = req.body;
 
-    if (!req.body.email.length || !req.body.name.length || !req.body.phone.length || !req.body.price.length || !req.body.login_id.length || !req.body.chk_in.length || !req.body.chk_out.length || !req.body.pro_id.length) {
+    if (!req.body.email.length || !req.body.name.length || !req.body.phone.length || !req.body.price.length || !req.body.login_id.length || !req.body.chk_in.length || !req.body.chk_out.length || !req.body.pro_id.length || !req.body.paymentstatus.length) {
         return res.json({ Error: "Please enter details" })
     }
 
-    const data = new model({ email: req.body.email, name: req.body.name, phone: req.body.phone, price: req.body.price, login_id: req.body.login_id, chk_in: req.body.chk_in, chk_out: req.body.chk_out, pro_id: req.body.pro_id, stay_day: req.body.stay_day })
+    const data = new model({ email: req.body.email, name: req.body.name, phone: req.body.phone, price: req.body.price, login_id: req.body.login_id, chk_in: req.body.chk_in, chk_out: req.body.chk_out, pro_id: req.body.pro_id, stay_day: req.body.stay_day, paymentstatus: req.body.paymentstatus })
     const result = await data.save();
     return res.json({ Status: "Success" })
 
@@ -290,6 +292,13 @@ app.get('/booking_history/:id', async (req, res) => {
     const id = req.params.id;
     const model = new mongoose.model('pay_detail', pay_detailSchema);
     const result = await model.find({ login_id: id });
+    res.json({ Result: result, Status: 'Success' })
+})
+
+app.get('/findprice/:p', async (req, res) => {
+    const p = req.params.p;
+    const model = new mongoose.model('pay_detail', pay_detailSchema);
+    const result = await model.find({ price: p });
     res.json({ Result: result, Status: 'Success' })
 })
 
@@ -410,12 +419,42 @@ app.post('/forgetpassword/:email', async (req, res) => {
 app.post('/payment', async (req, res) => {
     const model = new mongoose.model('paymenthistory', paymentHistory);
 
+    console.log(req.params.p)
+
     if (!req.body.cardname.length || !req.body.cardnumber.length || !req.body.expire.length || !req.body.cvv.length || !req.body.Tprice.length) {
         return res.json({ Error: "Please enter details" })
     }
 
     const data = new model({ cardname: req.body.cardname, cardnumber: req.body.cardnumber, expire: req.body.expire, cvv: req.body.cvv, Tprice: req.body.Tprice })
     const result = await data.save();
+
+    const model1 = new mongoose.model('pay_detail', pay_detailSchema);
+    const result1 = await model1.updateOne(
+        { price: req.body.Tprice }, {
+        $set: { paymentstatus: req.body.paymentstatus }
+    })
+    return res.json({ Status: "Success" })
+
+})
+
+app.post('/payment/:p', async (req, res) => {
+    const model = new mongoose.model('paymenthistory', paymentHistory);
+
+    // console.log(req.params.p)
+    const price = req.params.p;
+
+    if (!req.body.cardname.length || !req.body.cardnumber.length || !req.body.expire.length || !req.body.cvv.length || !price.length) {
+        return res.json({ Error: "Please enter details" })
+    }
+
+    const data = new model({ cardname: req.body.cardname, cardnumber: req.body.cardnumber, expire: req.body.expire, cvv: req.body.cvv, Tprice: price })
+    const result = await data.save();
+
+    const model1 = new mongoose.model('pay_detail', pay_detailSchema);
+    const result1 = await model1.updateOne(
+        { price: price }, {
+        $set: { paymentstatus: req.body.paymentstatus }
+    })
     return res.json({ Status: "Success" })
 
 })
