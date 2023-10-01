@@ -124,7 +124,7 @@ const verifyUser = (req, res, next) => {
         jwt.verify(token, "jwt-secret-key", (err, decoded) => {
             if (err) return res.json({ Error: "Token wrong" })
             req.role = decoded.role;
-            req.id = decoded.id
+            req.id = decoded.id;
             req.image = decoded.image;
             req.name = decoded.name;
             next();
@@ -273,9 +273,25 @@ app.get('/placedetail/:id', async (req, res) => {
 
 //------->End(places/category)
 
-
-app.post('/pay_detail', async (req, res) => {
+const authorizeUser=(req,res,next)=>{
+    const token = req.cookies.token;
+    console.log("TOKEN IS ",token);
+    if (!token) {
+        return res.json({ Error: "Yor are not Authenticated" })
+    }
+    else {
+        jwt.verify(token, "jwt-secret-key", (err, decoded) => {
+            if (err) return res.json({ Error: "Token wrong" })
+            const user=decoded;
+            req.user=user;
+            next();
+        })
+    }
+}
+app.post('/pay_detail',authorizeUser, async (req, res) => {
+    // console.log("PAY DETAIL I SHERE");
     const model = new mongoose.model('pay_detail', pay_detailSchema);
+    req.body.login_id=req.user.id
     // const { name, email, password, image } = req.body;
 
     if (!req.body.email.length || !req.body.name.length || !req.body.phone.length || !req.body.price.length || !req.body.login_id.length || !req.body.chk_in.length || !req.body.chk_out.length || !req.body.pro_id.length || !req.body.paymentstatus.length) {
